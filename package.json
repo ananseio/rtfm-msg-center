@@ -1,0 +1,45 @@
+{
+  "name": "rtfm-msg-center",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Listen to ANT+ device broadcasts and publish to via AWS SNS",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build-dist": "yarn clean-dist && yarn build",
+    "clean-dist": "rm -rf dist",
+    "build": "tsc -d -p tsconfig.build.json",
+    "watch": "tsc -w -d -p tsconfig.build.json",
+    "test": "jest --coverage --config jest.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com:bedatse/rtfm-msg-center.git"
+  },
+  "author": "Beda Tse <beda@ananse.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bedatse/rtfm-msg-center/issues"
+  },
+  "homepage": "https://github.com/bedatse/rtfm-msg-center#readme",
+  "dependencies": {
+    "@types/bunyan": "^1.8.2",
+    "@types/seamless-immutable": "^7.1.1",
+    "ant-plus": "^0.0.9",
+    "aws-sdk": "^2.104.0",
+    "bunyan": "^1.8.12",
+    "config": "^1.26.1",
+    "noble": "^1.8.1",
+    "seamless-immutable": "^7.1.2"
+  },
+  "devDependencies": {
+    "@types/config": "^0.0.32",
+    "@types/jest": "^20.0.4",
+    "@types/node": "^8.0.14",
+    "jest": "^20.0.4",
+    "js-yaml": "^3.8.4",
+    "ts-jest": "^20.0.7",
+    "tslint": "^5.5.0",
+    "typescript": "^2.4.1"
+  }
+}
