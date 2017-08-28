@@ -13,10 +13,10 @@ const logger: Logger = Logger.createLogger({
 });
 
 const sns = new SNS({
-  apiVersion: '2010-03-01',
+  apiVersion: '2010-03-31',
   accessKeyId: config.get<string>('aws-access-key'),
   secretAccessKey: config.get<string>('aws-secret'),
-  region: config.get<string>('aws-region');
+  region: config.get<string>('aws-region'),
 });
 const snsTopic:string = config.get<string>('aws-sns-topic-arn');
 const reportInterval = config.get<number>('heartbeat-interval');
@@ -32,13 +32,15 @@ antplusCtrl.on('heartbeat', (heartbeat: Heartbeat) => {
   heartbeatStore.add(heartbeat);
 });
 
-setInterval(() => {
-  const heartbeatDetails = heartbeatStore.report();
-  if (Object.keys(heartbeatDetails).length > 0) {
-    const base64Msg = new Buffer(JSON.stringify(heartbeatDetails))
+antplusCtrl.open();
+
+export function tick() {
+  const heartbeats: Heartbeat[] = heartbeatStore.report();
+  if (heartbeats.length > 0) {
+    const base64Msg = new Buffer(JSON.stringify(heartbeats))
       .toString('base64');
 
-    logger.debug({ heartbeatDetails }, 'publishing to SNS');
+    logger.debug({ heartbeats }, 'publishing to SNS');
 
     sns.publish({
       Message: base64Msg,
@@ -47,12 +49,12 @@ setInterval(() => {
       if (err) {
         logger.warn(err);
       } else {
-        logger.info({data}, 'message sent');
+        logger.info({ data }, 'published to SNS');
       }
     });
 
     heartbeatStore.clear();
   }
-}, reportInterval);
+}
 
-antplusCtrl.open();
+setInterval(tick, reportInterval);
