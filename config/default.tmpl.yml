@@ -1,3 +1,4 @@
+node-id: <MSG_CENTER_NODE_ID>
 name: rtfm-msg-center
 log-level: trace
 aws-region: <AWS_REGION>

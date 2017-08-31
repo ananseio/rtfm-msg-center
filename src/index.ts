@@ -19,6 +19,7 @@ const sns = new SNS({
   region: config.get<string>('aws-region'),
 });
 const snsTopic:string = config.get<string>('aws-sns-topic-arn');
+const nodeId: string = config.get<string>('node-id');
 const reportInterval = config.get<number>('heartbeat-interval');
 
 const antplusCtrl = new AntPlusController(logger);
@@ -37,10 +38,14 @@ antplusCtrl.open();
 export function tick() {
   const heartbeats: Heartbeat[] = heartbeatStore.report();
   if (heartbeats.length > 0) {
-    const base64Msg = new Buffer(JSON.stringify(heartbeats))
-      .toString('base64');
+    const msg = {
+      nodeId,
+      timestamp: Date.now(),
+      heartbeats
+    };
+    const base64Msg = new Buffer(JSON.stringify(msg)).toString('base64');
 
-    logger.debug({ heartbeats }, 'publishing to SNS');
+    logger.debug(msg, 'publishing to SNS');
 
     sns.publish({
       Message: base64Msg,
