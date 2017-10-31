@@ -1,8 +1,8 @@
 node-id: <MSG_CENTER_NODE_ID>
 name: rtfm-msg-center
 log-level: trace
-aws-region: <AWS_REGION>
-aws-access-key: <AWS_ACCESS_KEY>
-aws-secret: <AWS_SECRET_ACCESS_KEY>
-aws-sns-topic-arn: <AWS_SNS_TOPIC>
+aws-iot-root-ca: .device-certificate/symantec-root.pem
+aws-iot-device-private-key: .device-certificate/<AWS_IOT_DEVICE_PRIVATE_KEY>
+aws-iot-device-cert: .device-certificate/<AWS_IOT_DEVICE_CERTIFICATE>
+aws-iot-endpoint: <AWS_IOT_DEVICE_ENDPOINT>
 heartbeat-interval: 1000

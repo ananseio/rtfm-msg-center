@@ -5,9 +5,9 @@
   "description": "Listen to ANT+ device broadcasts and publish to via AWS SNS",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "sudo node dist/index.js",
     "build-dist": "yarn clean-dist && yarn build",
-    "clean-dist": "rm -rf dist",
+    "clean-dist": "rimraf dist",
     "build": "tsc -d -p tsconfig.build.json",
     "watch": "tsc -w -d -p tsconfig.build.json",
     "test": "jest --coverage --config jest.json"
@@ -26,10 +26,12 @@
     "@types/bunyan": "^1.8.2",
     "@types/seamless-immutable": "^7.1.1",
     "ant-plus": "^0.0.9",
+    "aws-iot-device-sdk": "^2.1.0",
     "aws-sdk": "^2.104.0",
     "bunyan": "^1.8.12",
     "config": "^1.26.1",
-    "noble": "^1.8.1"
+    "noble": "^1.8.1",
+    "rimraf": "^2.6.2"
   },
   "devDependencies": {
     "@types/config": "^0.0.32",

@@ -62,3 +62,5 @@ env/*.vals.yml
 dist/*
 credentials/*
 config/default.yml
+
+.device-certificate/*

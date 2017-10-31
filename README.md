@@ -1,5 +1,5 @@
-# antplus-link
-Listen to ANT+ device broadcasts and publish to via a pub/sub protocol
+# rtfm-msg-center
+Listen to ANT+ device broadcasts and publish to via MQTT with AWS IoT Core
 
 ### Installing and executing on Raspbian
 ```

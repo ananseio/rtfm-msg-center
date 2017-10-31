@@ -12,8 +12,22 @@ export class HeartbeatStore {
     this.heartbeatsTs.add(hb);
   }
 
-  report(): Heartbeat[] {
-    return [...this.heartbeatsTs.heartbeat];
+  report(): {
+    [deviceId: string]: Heartbeat[],
+  } {
+    return this.heartbeatsTs.heartbeat.reduce(
+      (accum, hb) => {
+        const deviceId: string = String(hb.DeviceID);
+        return {
+          ...accum,
+          [deviceId]: [
+            ...(accum[deviceId] || []),
+            hb
+          ],
+        }
+      },
+      {}
+    )
   }
 
   clear(): void {

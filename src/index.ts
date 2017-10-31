@@ -4,7 +4,8 @@ import * as Logger from 'bunyan';
 import { AntPlusController } from './lib/ant-plus';
 import { HeartbeatStore } from './lib/hb-store';
 import { Heartbeat } from './lib/models/heartbeat';
-import { SNS } from 'aws-sdk';
+
+import { device as IoTDevice } from 'aws-iot-device-sdk';
 
 const logger: Logger = Logger.createLogger({
   name: 'rtfm-msg-center',
@@ -12,15 +13,16 @@ const logger: Logger = Logger.createLogger({
   serializers: Logger.stdSerializers,
 });
 
-const sns = new SNS({
-  apiVersion: '2010-03-31',
-  accessKeyId: config.get<string>('aws-access-key'),
-  secretAccessKey: config.get<string>('aws-secret'),
-  region: config.get<string>('aws-region'),
-});
-const snsTopic:string = config.get<string>('aws-sns-topic-arn');
+const deviceName: string = config.get<string>('name');
 const nodeId: string = config.get<string>('node-id');
 const reportInterval = config.get<number>('heartbeat-interval');
+const device = IoTDevice({
+  keyPath: config.get<string>('aws-iot-device-private-key'),
+  certPath: config.get<string>('aws-iot-device-cert'),
+  caPath: config.get<string>('aws-iot-root-ca'),
+  clientId: `${deviceName}::${nodeId}`,
+  host: config.get<string>('aws-iot-endpoint'),
+});
 
 const antplusCtrl = new AntPlusController(logger);
 const heartbeatStore = new HeartbeatStore();
@@ -36,30 +38,28 @@ antplusCtrl.on('heartbeat', (heartbeat: Heartbeat) => {
 antplusCtrl.open();
 
 export function tick() {
-  const heartbeats: Heartbeat[] = heartbeatStore.report();
-  if (heartbeats.length > 0) {
-    const msg = {
-      nodeId,
-      timestamp: Date.now(),
-      heartbeats
-    };
-    const base64Msg = new Buffer(JSON.stringify(msg)).toString('base64');
-
-    logger.debug(msg, 'publishing to SNS');
-
-    sns.publish({
-      Message: base64Msg,
-      TopicArn: snsTopic,
-    }, (err, data) => {
-      if (err) {
-        logger.warn(err);
-      } else {
-        logger.info({ data }, 'published to SNS');
-      }
-    });
+  const heartbeats: {
+    [deviceId: string]: Heartbeat[],
+  } = heartbeatStore.report();
+  const timestamp_nodeId = `${Date.now()}.${nodeId}`;
+  const devices = Object.keys(heartbeats);
+  if (devices.length > 0) {
+    for ( let deviceId of devices ) {
+      const msg = {
+        deviceId,
+        timestamp_nodeId,
+        nodeId,
+        data: heartbeats[deviceId],
+      };
+      logger.trace({ msgToAWS: msg }, 'publishing to AWS IoT');
+      device.publish('rtfm_data', JSON.stringify(msg));
+    }
 
     heartbeatStore.clear();
   }
 }
 
-setInterval(tick, reportInterval);
+device.on('connect', () => {
+  logger.info('Connected to AWS IoT Core');
+  setInterval(tick, reportInterval);
+});
