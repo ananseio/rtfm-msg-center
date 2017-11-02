@@ -26,6 +26,8 @@ const device = IoTDevice({
 
 const antplusCtrl = new AntPlusController(logger);
 const heartbeatStore = new HeartbeatStore();
+const customerId = config.get<string>('customer-id');
+const mqttTopic = `rtfm/${customerId}`;
 
 antplusCtrl.on('ready', async () => {
   antplusCtrl.scan();
@@ -37,24 +39,32 @@ antplusCtrl.on('heartbeat', (heartbeat: Heartbeat) => {
 
 antplusCtrl.open();
 
+export function processHeartbeatData(deviceId: string, heartbeats: Heartbeat[]) {
+  const timestamp_nodeId = `${Date.now()}.${nodeId}`;
+  try {
+    const msg = {
+      deviceId,
+      timestamp_nodeId,
+      nodeId,
+      data: heartbeats,
+    };
+    logger.trace({ msgToAWS: msg }, 'publishing to AWS IoT');
+    device.publish(mqttTopic, JSON.stringify(msg));
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 export function tick() {
   const heartbeats: {
     [deviceId: string]: Heartbeat[],
   } = heartbeatStore.report();
-  const timestamp_nodeId = `${Date.now()}.${nodeId}`;
   const devices = Object.keys(heartbeats);
   if (devices.length > 0) {
-    for ( let deviceId of devices ) {
-      const msg = {
-        deviceId,
-        timestamp_nodeId,
-        nodeId,
-        data: heartbeats[deviceId],
-      };
-      logger.trace({ msgToAWS: msg }, 'publishing to AWS IoT');
-      device.publish('rtfm_data', JSON.stringify(msg));
-    }
-
+    devices.forEach((deviceId) => processHeartbeatData(
+      deviceId,
+      heartbeats[deviceId]
+    ));
     heartbeatStore.clear();
   }
 }

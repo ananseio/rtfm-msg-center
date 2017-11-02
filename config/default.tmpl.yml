@@ -5,4 +5,5 @@ aws-iot-root-ca: .device-certificate/symantec-root.pem
 aws-iot-device-private-key: .device-certificate/<AWS_IOT_DEVICE_PRIVATE_KEY>
 aws-iot-device-cert: .device-certificate/<AWS_IOT_DEVICE_CERTIFICATE>
 aws-iot-endpoint: <AWS_IOT_DEVICE_ENDPOINT>
+customer-id: <CUSTOMER_ID>
 heartbeat-interval: 1000
