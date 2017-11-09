@@ -48,7 +48,7 @@ export function processHeartbeatData(deviceId: string, heartbeats: Heartbeat[]) 
       nodeId,
       data: heartbeats,
     };
-    logger.trace({ msgToAWS: msg }, 'publishing to AWS IoT');
+    logger.trace({ mqttTopic, msgToAWS: msg }, 'publishing to AWS IoT');
     device.publish(mqttTopic, JSON.stringify(msg));
   } catch (err) {
     console.error(err);

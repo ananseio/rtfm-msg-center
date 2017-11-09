@@ -48,7 +48,7 @@ export function processHeartbeatData(deviceId: string, heartbeats: Heartbeat[]) 
       nodeId,
       data: heartbeats,
     };
-    logger.trace({ msgToAWS: msg }, 'publishing to AWS IoT');
+    logger.trace({ mqttTopic, msgToAWS: msg }, 'publishing to AWS IoT');
     device.publish(mqttTopic, JSON.stringify(msg));
   } catch (err) {
     console.error(err);
@@ -75,32 +75,36 @@ device.on('connect', () => {
 });
 
 /* ============== */
+function mockDevice(DeviceID: number) {
+  let beatcount = 1;
+  let previousBeat = Date.now() % 65536;
+  const heartbeatReading: number[] = [];
+  const baseline = 85;
+  const variance = 100;
 
-let beatcount = 1;
-let previousBeat = Date.now() % 65536;
-const DeviceID = 105171;
-const heartbeatReading: number[] = [];
-const baseline = 85;
-const variance = 100;
+  for (let i = 0; i < 10; i++) {
+    heartbeatReading.push(baseline + Math.floor(Math.random() * variance));
+  }
 
-for (let i = 0; i < 10; i++) {
-  heartbeatReading.push(baseline + Math.floor(Math.random() * variance));
+  setInterval(() => {
+    const curTime = Date.now();
+    const curBeat = curTime % 65536;
+    heartbeatReading.shift();
+    heartbeatReading.push(baseline + Math.floor(Math.random() * variance));
+    const hb = {
+      DeviceID,
+      Timestamp: curTime,
+      BeatCount: beatcount,
+      PreviousBeat: previousBeat,
+      BeatTime: curBeat,
+      ComputedHeartRate: Math.floor(heartbeatReading.reduce((accum, hr) => accum + hr, 0) / heartbeatReading.length),
+    };
+    heartbeatStore.add(hb);
+    beatcount += 1;
+    previousBeat = curBeat;
+  }, 1500);
 }
 
-setInterval(() => {
-  const curTime = Date.now();
-  const curBeat = curTime % 65536;
-  heartbeatReading.shift();
-  heartbeatReading.push(baseline + Math.floor(Math.random() * variance));
-  const hb = {
-    DeviceID,
-    Timestamp: curTime,
-    BeatCount: beatcount,
-    PreviousBeat: previousBeat,
-    BeatTime: curBeat,
-    ComputedHeartRate: Math.floor(heartbeatReading.reduce((accum, hr) => accum+hr, 0) / heartbeatReading.length),
-  };
-  heartbeatStore.add(hb);
-  beatcount += 1;
-  previousBeat = curBeat;
-}, 1500);
+process.argv.slice(2).forEach((v) => {
+  mockDevice(Number(v));
+});
